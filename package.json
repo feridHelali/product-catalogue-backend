@@ -1,0 +1,22 @@
+{
+  "name": "Atelier_Catalogue",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "cors": "^2.8.4",
+    "express": "^4.15.3",
+    "fs": "0.0.1-security",
+    "lodash": "^4.17.4",
+    "mongodb": "^2.2.30",
+    "mongoose": "^4.11.1",
+    "multer": "^1.3.0"
+  }
+}
