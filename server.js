@@ -4,11 +4,14 @@ var bodyparser = require('body-parser');
 var mongoClient = require('mongodb').MongoClient;
 var cors = require('cors');
 var multer = require('multer');
+var Q = require('q');
+var path = require('path');
 
 var mongoose = require('mongoose');
 var schema = require('mongoose').Schema;
 var ObjectID = require('mongodb').ObjectID;
 var BSON = mongoClient.BSONPure;
+
 
 mongoose.connect('mongodb://localhost/product_db');
 
@@ -21,21 +24,21 @@ var productSchema = schema({
     category: {
         type: String,
         default: 'Divers'
-    }
+    },
+    photo_url:String
 });
 
 var produitModel = mongoose.model('products', productSchema);
 
 var app = express();
 
-app.use(express.static('public'));
 app.use(cors());
 
 app.use(function (req, res, next) { //allow cross origin requests
     res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.header("Access-Control-Allow-Credentials", false);
+    res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+    res.header("Access-Control-Allow-Credentials", true);
     next();
 });
 
@@ -45,8 +48,9 @@ app.use(bodyparser.urlencoded({
 }));
 app.use(bodyparser.json());
 
+app.use("/upload", express.static(path.join(__dirname, 'upload')));
+app.use(express.static('public'));
 
-app.use(express.static('public'))
 
 
 app.post('/products', (req, res) => {
@@ -54,14 +58,11 @@ app.post('/products', (req, res) => {
     var item = {
         designation: req.body.designation,
         price: req.body.price,
-        categorie: req.body.category
+        category: req.body.category
     };
     produitModel.collection.insertOne(item, function (err, result) {
         console.log("1 record inserted");
     })
-
-
-    //13/07/2017
 })
 
 app.get('/products', (req, res) => {
@@ -93,22 +94,29 @@ app.put('/products/:productId', (req, res) => {
 
 var storage = multer.diskStorage({ //multers disk storage settings
     destination: function (req, file, cb) {
-        cb(null, './uploads/');
+        cb(null, './upload');
     },
     filename: function (req, file, cb) {
-        var datetimestamp = Date.now();
-        cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]);
+        var produitId=req.body.produitId;
+        console.log(produitId);
+        var path = file.fieldname + '_' +produitId+'.'+file.originalname.split('.')[file.originalname.split('.').length - 1];
+        cb(null, path);
+        updatePhoto(produitId, path)
+            .then(function () {
+                res.sendStatus(200);
+            })
+            .catch(function (err) {
+                res.status(400).send(err);
+            });
+            
+
     }
 });
 
-var upload = multer({ //multer settings
-    storage: storage
-}).single('file');
+var upload = multer({storage: storage}).single('photo');
 
-/** API path that will upload the files */
-app.post('/upload', function (req, res) {
+app.post('/upload', upload, function (req, res, next) {
     upload(req, res, function (err) {
-        console.log(req.file);
         if (err) {
             res.json({
                 error_code: 1,
@@ -118,13 +126,22 @@ app.post('/upload', function (req, res) {
         }
         res.json({
             error_code: 0,
-            err_desc: null
+            err_desc: 'Product Photo successfully uploded'
         });
     });
 });
 
+function updatePhoto(_id, path) {
+    var deferred = Q.defer();
+    produitModel.findByIdAndUpdate(_id, { $set: { photo_url: path } },
+        function(err, doc) {
+            if (err) deferred.reject(err.name + ': ' + err.message);
+            deferred.resolve();
+        });
+    return deferred.promise;
+}
 
-
+// Server Listening on http://localhost:3000
 app.listen(3000, () => {
     console.log('Server listening on 3000');
 })
