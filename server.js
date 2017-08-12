@@ -11,7 +11,10 @@ var schema = require('mongoose').Schema;
 var ObjectID = require('mongodb').ObjectID;
 
 mongoose.connect('mongodb://localhost/product_db');
-var productRouter=require('./routes/product.route');
+
+var produitModel = require('./schemas/product-schemas');
+var productRouter = require('./routes/product.route');
+var userRouter = require('./routes/user.route');
 
 var app = express();
 
@@ -34,7 +37,8 @@ app.use(bodyparser.json());
 app.use("/upload", express.static(path.join(__dirname, 'upload')));
 app.use(express.static('public'));
 
-app.use('/',productRouter);
+app.use('/', productRouter);
+app.use('/', userRouter);
 
 
 var storage = multer.diskStorage({ //multers disk storage settings
@@ -42,9 +46,9 @@ var storage = multer.diskStorage({ //multers disk storage settings
         cb(null, './upload');
     },
     filename: function (req, file, cb) {
-        var produitId=req.body.produitId;
+        var produitId = req.body.produitId;
         console.log(produitId);
-        var path = file.fieldname + '_' +produitId+'.'+file.originalname.split('.')[file.originalname.split('.').length - 1];
+        var path = file.fieldname + '_' + produitId + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1];
         cb(null, path);
         updatePhoto(produitId, path)
             .then(function () {
@@ -53,12 +57,14 @@ var storage = multer.diskStorage({ //multers disk storage settings
             .catch(function (err) {
                 res.status(400).send(err);
             });
-            
+
 
     }
 });
 
-var upload = multer({storage: storage}).single('photo');
+var upload = multer({
+    storage: storage
+}).single('photo');
 
 app.post('/upload', upload, function (req, res, next) {
     upload(req, res, function (err) {
@@ -78,8 +84,12 @@ app.post('/upload', upload, function (req, res, next) {
 
 function updatePhoto(_id, path) {
     var deferred = Q.defer();
-    produitModel.findByIdAndUpdate(_id, { $set: { photo_url: path } },
-        function(err, doc) {
+    produitModel.findByIdAndUpdate(_id, {
+            $set: {
+                photo_url: path
+            }
+        },
+        function (err, doc) {
             if (err) deferred.reject(err.name + ': ' + err.message);
             deferred.resolve();
         });

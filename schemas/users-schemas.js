@@ -12,7 +12,7 @@ var userSchema = schema({
         type: String,
         required: true
     },
-    password:{
+    password: {
         type: String,
         required: true
     },
@@ -20,30 +20,40 @@ var userSchema = schema({
         type: String,
         default: 'default_avatar.png'
     },
-    gender:{
+    gender: {
         type: String,
         required: true,
-        default:'Homme'
+        default: 'Homme'
     },
-    region:{
+    region: {
         type: String,
-        default:'Mahdia'
+        default: 'Mahdia'
     },
-    facebookAut:{
-        ClientID:String,
-        ClientSecret:String,
-        ClientCallback:String
+    facebookAut: {
+        ClientID: String,
+        ClientSecret: String,
+        ClientCallback: String
     },
-    twitterAuth:{
-        consumerKey:String,
-        consumerSecret:String,
-        callbackURL:String
+    twitterAuth: {
+        consumerKey: String,
+        consumerSecret: String,
+        callbackURL: String
     },
-    googleAuth:{
-        ClientID:String,
-        ClientSecret:String,
-        ClientCallback:String
-    }
+    googleAuth: {
+        ClientID: String,
+        ClientSecret: String,
+        ClientCallback: String
+    },
+    friends: [{
+        friendId: {
+            type: String,
+            ref: 'users',
+            friendShipAt: {
+                type: Date,
+                defaut: Date.now()
+            }
+        }
+    }]
 });
 
 module.exports = mongoose.model('users', userSchema);
