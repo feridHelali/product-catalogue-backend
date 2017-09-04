@@ -15,6 +15,7 @@ mongoose.connect('mongodb://localhost/product_db');
 var produitModel = require('./schemas/product-schemas');
 var productRouter = require('./routes/product.route');
 var userRouter = require('./routes/user.route');
+var invitationRouter = require('./routes/invitation.route');
 
 var app = express();
 
@@ -39,6 +40,7 @@ app.use(express.static('public'));
 
 app.use('/', productRouter);
 app.use('/', userRouter);
+app.use('/', invitationRouter);
 
 
 var storage = multer.diskStorage({ //multers disk storage settings
@@ -81,6 +83,7 @@ app.post('/upload', upload, function (req, res, next) {
         });
     });
 });
+
 
 function updatePhoto(_id, path) {
     var deferred = Q.defer();

@@ -11,7 +11,7 @@ router.post('/users', (req, res) => {
         region:req.body.region
     };
     userModel.collection.insertOne(item, function (err, result) {
-        console.log("1 record inserted");
+        console.log("User inserted Successfully");
         res.send(item);
     })
 })
@@ -23,6 +23,14 @@ router.get('/users', (req, res) => {
 
     })
 })
+router.get('/users/:id', (req, res) => {
+    var userId=req.params.id;
+    userModel.findById({_id:userId},function (err, user) {
+        if (err) res.send(err);
+        res.send(user);
+    })
+})
+
 
 router.delete('/users/:userId', function (req, res) {
     //console.log('user deleted : ' + req.params.productId);
@@ -42,5 +50,38 @@ router.put('/users/:userId', (req, res) => {
         res.send('user successfully updated');
     });
 })
+
+//Authentication
+router.post('/users/authenticate', (req, res) => {
+   // var deferred = Q.defer();
+    var user_name=req.body.user_name;
+    var password=req.body.password;
+    console.log(user_name,'  ',password);
+    userModel.findOne({
+        user_name: user_name
+    }, function (err, user) {
+        if (err) deferred.reject(err.name + ': ' + err.message);
+
+        if (user && (password===user.password)) {
+            // authentication successful
+      /*      deferred.resolve({
+                _id: user._id,
+                user_name: user.user_name,
+                password:user.password,
+                avatar_url: user.avatar_url,
+                gender: user.gender,
+                region: user.region,
+            });*/
+            res.send({err:"Login Succeed",message:user});
+        } else {
+            // authentication failed
+    //        deferred.resolve();
+            res.send({err:"Login Failed",message:'Autenticated Failed Try again'})
+        }
+    });
+
+  //  return deferred.promise;
+})
+
 
 module.exports = router;
